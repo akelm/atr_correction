@@ -27,7 +27,6 @@ def corr_spctr(filename):
 #==============================================================================
     # constant term
     slice1=np.array([*range(170),*range(1460,1529)])
-#    imgplot3=plt.plot(widmo[:,0],np.ones(widmo[:,0].size)*np.min(widmo[slice1,1]),'-b')
     widmo[:,1]=widmo[:,1]-np.min(widmo[slice1,1])
     # square term
     slice1=np.array([*range(200),*range(1479,1529)])
@@ -44,12 +43,6 @@ def corr_spctr(filename):
         if poly1[-3] >= 0:
             widmo[:,1]=widmo[:,1]-np.polyval(poly1,np.arange(widmo[:,1].size))
             
-#    else:
-#        imgplot3=plt.plot(widmo[:,0],np.ones(widmo[:,0].size)*np.min(widmo[slice1,1]),'-b')
-#        widmo[:,1]=widmo[:,1]-np.min(widmo[slice1,1])
-        
-            
-#    widmo[:,1]=widmo[:,1]-widmo[0,1]
 #==============================================================================
 # #    usuniecie srodka z ujemnymi wartosciami
 #==============================================================================
@@ -102,7 +95,7 @@ for filename in files:
     print('==',filename)
     corr_spctr(filename)
     filename2=os.path.splitext(filename)[0]+'_corr'+os.path.splitext(filename)[1]
-    atr_lowabs(filename2)
+    atr(filename2)
     
     
     
