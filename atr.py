@@ -9,6 +9,8 @@ import numpy as np
 from scipy import constants
 import matplotlib.pyplot as plt
 import os
+from sklearn.metrics import r2_score
+
 
 def kramers(k,wavenumbers_in):
 #    k - imaginary part of refractive index
@@ -28,8 +30,10 @@ def kramers(k,wavenumbers_in):
     delta_waven[[0,-1]]=2*delta_waven[[0,-1]]
 #    denominator
     mianownik=wavenumbers[:,None]**2 - wavenumbers[None,:]**2
+    mianownik[np.diag_indices(wavenumbers.size)]=np.finfo(float).eps
 #    matrix for integration along 0th dimension
     calka=(wavenumbers[:,None] * k[:,None] * delta_waven[:,None] )/mianownik
+    calka[np.diag_indices(wavenumbers.size)]=0
     calka[np.isinf(calka)]=0
 #    result - the refractive index
 #    value 1.485 is the shift for toluene taken from "Determination of infrared optical constants for single-component hydrocarbon fuels"
@@ -71,10 +75,11 @@ def plotting(x,ys,filename):
     plt.close('all')
     
 
-def atr_exact(filename,ncryst=2.4,angle=45,nrefl=1,chi_red=1.1):
+def atr_exact(filename,ncryst=2.4,angle=45,nrefl=1,r2=1):
     
     widmo=np.genfromtxt(filename,delimiter=' ')
     Aexp=widmo[:,1]
+    Aexp[Aexp==0]=np.finfo(float).eps
     wavenumbers=widmo[:,0]
     theta=angle*np.pi/180
 #==============================================================================
@@ -88,17 +93,19 @@ def atr_exact(filename,ncryst=2.4,angle=45,nrefl=1,chi_red=1.1):
 # #    atr signal from exact formulas
 #==============================================================================
     Aexact=abs_exact(n,k,wavenumbers,ncryst,angle,nrefl)
-    delta_A=Aexp-Aexact
-    cond=np.nansum((delta_A**2) / np.abs(Aexp))
+
+#    cond=np.nansum((delta_A**2) / np.abs(Aexp))
+    cond = np.abs(1-r2_score(Aexp,Aexact))
     it=0
-    while cond>chi_red:
+    while cond>0.01:
         # from approx formula
-        delta_k=delta_A*(ncryst**2-n**2) * np.sqrt(ncryst**2 * np.sin(theta)**2 - n**2) / (0.434 * 3/2 * 4 *n*ncryst*np.cos(theta))/nrefl
+        delta_A=Aexp-Aexact
+        delta_k=delta_A*(ncryst**2-n**2) * np.sqrt(ncryst**2 * np.sin(theta)**2 - n**2) / (0.434 * 3/2 * 4 *n*ncryst*np.cos(theta)) / nrefl
+        delta_k[np.isnan(delta_k)]=np.finfo(float).eps
         k=k+delta_k
         n=kramers(k,wavenumbers)
         Aexact=abs_exact(n,k,wavenumbers,ncryst,angle,nrefl)
-        delta_A=Aexp-Aexact
-        cond=np.nansum((delta_A**2) / np.abs(Aexp))
+        cond = np.abs(1-r2_score(Aexp,Aexact))
         it+=1
     print('=====exact ',it)
 
@@ -107,7 +114,7 @@ def atr_exact(filename,ncryst=2.4,angle=45,nrefl=1,chi_red=1.1):
 #==============================================================================
     #    this is not molar ext coefficient, but a value proportional to molar ext coeff
     molar_ext=k * wavenumbers
-    plotting(wavenumbers,[Aexp,molar_ext],filename)
+    plotting(wavenumbers,[Aexp,Aexact,molar_ext],filename)
     np.savetxt(os.path.splitext(filename)[0]+'_ref_ind.txt',np.concatenate( (wavenumbers[:,None],n[:,None]), axis=1) )
     np.savetxt(os.path.splitext(filename)[0]+'_molar_ext.txt',np.concatenate( (wavenumbers[:,None],molar_ext[:,None]), axis=1) )
     
