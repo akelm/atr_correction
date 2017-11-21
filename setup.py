@@ -7,10 +7,14 @@ Created on Sun Nov 19 10:23:18 2017
 """
 
 from distutils.core import setup
-from Cython.Build import cythonize
+from distutils.extension import Extension
+from Cython.Distutils import build_ext
+import numpy # to get includes
 
 # extensions = [Extension("*", ["yamsx/*.pyx"])]
 
 setup(
-    ext_modules = cythonize("kramers.pyx")
+    cmdclass = {'build_ext': build_ext},
+    ext_modules = [Extension("kramers", ["kramers.pyx"], )],
+    include_dirs = [numpy.get_include(),],
 )

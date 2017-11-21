@@ -93,12 +93,11 @@ def atr_exact(filename,ncryst=2.4,angle=45,nrefl=1,r2=1):
 # #    atr signal from exact formulas
 #==============================================================================
     Aexact=abs_exact(n,k,wavenumbers,ncryst,angle,nrefl)
-
-#    cond=np.nansum((delta_A**2) / np.abs(Aexp))
     cond = np.abs(1-r2_score(Aexp,Aexact))
     it=0
     while cond>0.01:
-        # from approx formula
+        # from approx formula from:
+        # Milosevic, Milan. Internal reflection and ATR spectroscopy. Vol. 262. John Wiley &amp; Sons, 2012.
         delta_A=Aexp-Aexact
         delta_k=delta_A*(ncryst**2-n**2) * np.sqrt(ncryst**2 * np.sin(theta)**2 - n**2) / (0.434 * 3/2 * 4 *n*ncryst*np.cos(theta)) / nrefl
         delta_k[np.isnan(delta_k)]=np.finfo(float).eps

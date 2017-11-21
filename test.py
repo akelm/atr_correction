@@ -28,6 +28,6 @@ cProfile.run('kramers_pyt(k,wavenumbers)', sort='time')
 
 #t2=time.time()
 #for l in range(5):
-cProfile.run('kramers.kramers(k,wavenumbers)', sort='time')
+cProfile.run('kramers.kramers1(k,wavenumbers)', sort='time')
 #t3=time.time()
 #print('cython ',(t3-t2)/(t1-t0)*100)

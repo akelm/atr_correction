@@ -11,62 +11,52 @@ cimport numpy as np
 
 #cdef int i=1
 
-def kramers(np.ndarray[np.float64_t] k, wavenumbers_in):
-    cdef np.ndarray[np.float64_t] wavenumbers, d_waven, delta_waven, n
-    cdef np.ndarray[np.int64_t] sort_ind, new_range, new_ind
+cdef np.ndarray[np.float64_t] kramers(np.ndarray[np.float64_t] k_in,np.ndarray[np.float64_t] wavenumbers_in):
+    cdef np.ndarray[np.float64_t] wavenumbers, delta_waven, n, licznik
+    cdef np.ndarray[np.int64_t] sort_ind
     cdef np.ndarray[np.float64_t,ndim=1] mianownik, calka
-    cdef int l
+    cdef int l, wavenumbers_l
 #    k - imaginary part of refractive index
 #    wavenumbers - in cm-1
 #
+    wavenumbers_l=wavenumbers_in.size
 #   sorting data
     sort_ind=np.argsort(wavenumbers_in)
-    wavenumbers=wavenumbers_in[sort_ind]
-#    print(np.sum(np.abs(wavenumbers_in-wavenumbers[sort_ind])))
-    k=k[sort_ind]
+    wavenumbers=np.zeros(wavenumbers_l)
+    k=np.zeros(wavenumbers_l)
+    for l in range(wavenumbers_l):
+        wavenumbers[l]=wavenumbers_in[sort_ind[l]]
+        k[l]=k_in[sort_ind[l]]      
+
 #   vector with dataspacing
-    d_waven=wavenumbers[1:]-wavenumbers[0:-1]
-#    vector for integration
-    delta_waven=np.zeros(wavenumbers.size)
-    delta_waven[0:-1]=delta_waven[0:-1]+d_waven*0.5
-    delta_waven[1:]=delta_waven[1:]+d_waven*0.5
-    delta_waven[[0,-1]]=2*delta_waven[[0,-1]]
-#==============================================================================
-#     stare, to sie zmieni
-#==============================================================================
-##    denominator
-#    mianownik=wavenumbers[:,None]**2 - wavenumbers[None,:]**2
-#    mianownik[np.diag_indices(wavenumbers.size)]=np.finfo(float).eps
-##    matrix for integration along 0th dimension
-#    calka=(wavenumbers[:,None] * k[:,None] * delta_waven[:,None] )/mianownik
-#    calka[np.diag_indices(wavenumbers.size)]=0
-#    calka[np.isinf(calka)]=0
-##    result - the refractive index
-##    value 1.485 is the shift for toluene taken from "Determination of infrared optical constants for single-component hydrocarbon fuels"
-#    n=2/np.pi*np.nansum(calka,axis=0) + 1.485
-#==============================================================================
-#     koniec starego
-#==============================================================================
-#==============================================================================
-# poczatek zmian
-#==============================================================================
-    n=np.zeros(wavenumbers.size)
+    delta_waven=np.zeros(wavenumbers_l)
+    for l in range(1,wavenumbers_l-1):
+        delta_waven[l]=0.5*(wavenumbers[l+1]-wavenumbers[l-1])
+    delta_waven[0]=wavenumbers[1]-wavenumbers[0]
+    delta_waven[wavenumbers_l-1]=wavenumbers[wavenumbers_l-1]-wavenumbers[wavenumbers_l-2]
+    licznik=wavenumbers * k * delta_waven
 #    denominator
-    for l in range(wavenumbers.size):
+    n=np.zeros(wavenumbers_l)
+    for l in range(wavenumbers_l):
         mianownik=wavenumbers**2 - wavenumbers[l]**2
-        mianownik[l]=np.finfo(float).eps
+        mianownik[l]=1
     #    matrix for integration along 0th dimension
-        calka=(wavenumbers * k * delta_waven )/mianownik
+        calka=licznik/mianownik
         calka[l]=0
-        calka[np.isinf(calka)]=0
+#        calka[np.isinf(calka)]=0
         #    result - the refractive index
         #    value 1.485 is the shift for toluene taken from "Determination of infrared     optical constants for single-component hydrocarbon fuels"
-        calka[calka==np.NaN]=0
-        n[l]=2/np.pi*np.sum(calka) + 1.485    
+#        calka[calka==np.NaN]=0
+#        with rearangement
+        n[sort_ind[l]]=2/np.pi*np.sum(calka) + 1.485    
 #==============================================================================
 # koniec zmian
 #==============================================================================
 #   rearranging back
-    new_range=np.arange(wavenumbers.size,dtype=np.int64)
-    new_ind=new_range[sort_ind]
-    return n[new_ind]
+#    n_out=np.zeros(wavenumbers_l)
+#    for l in range(wavenumbers_l):
+#        n_out[sort_ind[l]]=n[l]        
+    return n
+
+def kramers1(np.ndarray[np.float64_t]  k_in, np.ndarray[np.float64_t]  wavenumbers_in):
+    return kramers(k_in, wavenumbers_in)
