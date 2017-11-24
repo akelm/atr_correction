@@ -6,7 +6,7 @@ Created on Sun Nov 19 09:34:22 2017
 @author: ania
 """
 
-import time
+#import time
 import numpy as np
 from atr import kramers as kramers_pyt
 import kramers
