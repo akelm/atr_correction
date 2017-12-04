@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Nov 10 18:50:16 2017
+Created on Fri Dec  1 14:18:09 2017
 
 @author: ania
 """
@@ -11,6 +11,7 @@ cimport numpy as np
 cimport cython
 
 #cdef int i=1
+#print("running kramers1")
 @cython.boundscheck(False)
 cdef np.ndarray[np.float64_t] kramers(np.ndarray[np.float64_t] k_in, np.ndarray[np.float64_t] wavenumbers_in):
     cdef np.ndarray[np.float64_t] wavenumbers, delta_waven, n, licznik
@@ -20,6 +21,7 @@ cdef np.ndarray[np.float64_t] kramers(np.ndarray[np.float64_t] k_in, np.ndarray[
 #    k - imaginary part of refractive index
 #    wavenumbers - in cm-1
 #
+#    print("running kramers1")
     wavenumbers_l=wavenumbers_in.size
 #   sorting data
     sort_ind=np.argsort(wavenumbers_in)
@@ -58,7 +60,3 @@ cdef np.ndarray[np.float64_t] kramers(np.ndarray[np.float64_t] k_in, np.ndarray[
 #    for l in range(wavenumbers_l):
 #        n_out[sort_ind[l]]=n[l]        
     return n
-
-@cython.boundscheck(False)
-def kramers1(np.ndarray[np.float64_t]  k_in, np.ndarray[np.float64_t]  wavenumbers_in):
-    return kramers(k_in, wavenumbers_in)
